@@ -36,3 +36,12 @@ jobs:
         with:
           name: ERP凭证字段提取工具_Windows
           path: ERP凭证字段提取工具_Windows.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "ERP凭证字段提取工具 v${{ github.run_number }}"
+          files: ERP凭证字段提取工具_Windows.zip
+          draft: false
+          prerelease: false

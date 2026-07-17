@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -24,8 +27,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build Windows EXE
+        shell: pwsh
         run: |
-          pyinstaller --onedir --windowed --name "ERP凭证字段提取工具" --add-data "$(python -c 'import tkinterdnd2; print(tkinterdnd2.__path__[0])');tkinterdnd2" erp_extract_tool.py
+          $tkdnd = python -c "import tkinterdnd2; print(tkinterdnd2.__path__[0])"
+          pyinstaller --onedir --windowed --name "ERP凭证字段提取工具" --add-data "${tkdnd};tkinterdnd2" erp_extract_tool.py
 
       - name: Package into ZIP
         run: |
@@ -40,8 +45,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: "ERP凭证字段提取工具 v${{ github.run_number }}"
+          tag_name: v${{ github.run_id }}
+          name: "ERP凭证字段提取工具 (Build ${{ github.run_number }})"
           files: ERP凭证字段提取工具_Windows.zip
           draft: false
           prerelease: false

@@ -581,8 +581,20 @@ class ErpExtractApp:
         out_path = os.path.join(self.export_dir, f"汇总_{ts}.xlsx")
 
         try:
-            with pd.ExcelWriter(out_path, engine="openpyxl") as writer:
-                result_df.to_excel(writer, index=False, sheet_name="汇总")
+            # 大量数据写入优化：先用 xlsxwriter 引擎（性能好且无 sheet 可见性问题）
+            try:
+                import xlsxwriter
+                with pd.ExcelWriter(out_path, engine="xlsxwriter") as writer:
+                    result_df.to_excel(writer, index=False, sheet_name="汇总")
+            except ImportError:
+                # 回退 openpyxl，显式 mode="w" 避免默认 sheet 残留
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = "汇总"
+                wb.save(out_path)
+                with pd.ExcelWriter(out_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+                    result_df.to_excel(writer, index=False, sheet_name="汇总")
+
             log_callback(f"完成！共提取 {len(all_rows)} 条记录，导出至:\n  {out_path}")
             return out_path, len(all_rows)
         except Exception as e:
